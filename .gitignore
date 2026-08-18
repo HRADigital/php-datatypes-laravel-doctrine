@@ -1,0 +1,38 @@
+# Composer
+/vendor/
+composer.lock
+
+# CI artefacts
+/ci/
+
+# Local tool config overrides. The committed .dist files are the single source of truth;
+# every tool auto-discovers the non-dist name first, so a developer can drop one of these
+# next to the .dist without ever committing it.
+phpunit.xml
+phpcs.xml
+phpstan.neon
+.php-cs-fixer.php
+
+# Local tool caches
+.phpunit.result.cache
+/.phpunit.cache/
+.php-cs-fixer.cache
+/.phpcs-cache
+/.phpstan.cache/
+
+# IDE / editor
+/.idea/
+/.vscode/
+.buildpath
+.project
+.settings/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Scratch
+/notyetdeveloped/
