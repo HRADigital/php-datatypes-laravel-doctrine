@@ -65,7 +65,7 @@ That is the whole installation. Skip straight to [Usage](#usage).
 | PHP | 8.2, 8.3, 8.4 |
 | `hradigital/php-datatypes` | ^3.0 |
 | `doctrine/dbal` | ^3.8, ^4.0 |
-| Laravel (`illuminate/*`) | 10, 11, 12 |
+| Laravel (`illuminate/*`) | 11, 12 |
 
 Both DBAL majors are supported from one code base and both are exercised on every CI run.
 
