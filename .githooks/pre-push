@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+#
+# Runs the same static gates CI runs, before anything leaves the machine.
+#
+# QUIET=1 keeps it silent on success - the hook only speaks when it is about to stop a
+# push. Skips itself when the tool-chain is not installed, so a fresh clone that has not
+# run `composer install` yet is not blocked.
+#
+# Install with:  make hooks-install
+# Bypass once:   git push --no-verify
+
+set -euo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+
+if [ ! -x "${REPO_ROOT}/vendor/bin/phpcs" ]; then
+    echo "pre-push: vendor/ is not installed - skipping the static gates." >&2
+    exit 0
+fi
+
+if ! make -C "${REPO_ROOT}" validate QUIET=1; then
+    echo >&2
+    echo "pre-push: the static gates failed. Fix them, or push with --no-verify." >&2
+    exit 1
+fi
+
+exit 0
