@@ -118,7 +118,7 @@ jobs:
         run: composer run test-static
 
   tests:
-    name: Tests (PHP ${{ matrix.php }}, DBAL ${{ matrix.dbal }})
+    name: Tests (PHP ${{ matrix.php }}, Laravel ${{ matrix.laravel }}, DBAL ${{ matrix.dbal }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -128,6 +128,20 @@ jobs:
         # DBAL 3 declares getName() abstract, DBAL 4 dropped it - and this package carries
         # one code base for both, so a green run on only one major proves nothing.
         dbal: [ '^3.8', '^4.0' ]
+        laravel: [ '^11.0', '^12.0', '^13.0' ]
+        include:
+          # testbench majors track Laravel majors one-to-one, and its constraint has to be
+          # pinned alongside illuminate/* or composer is free to pair the wrong two.
+          - laravel: '^11.0'
+            testbench: '^9.0'
+          - laravel: '^12.0'
+            testbench: '^10.0'
+          - laravel: '^13.0'
+            testbench: '^11.0'
+        exclude:
+          # Laravel 13 requires PHP 8.3. The package still supports PHP 8.2 on Laravel 11/12.
+          - php: '8.2'
+            laravel: '^13.0'
 
     steps:
       - name: Checkout
@@ -149,13 +163,16 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
-          key: composer-${{ matrix.php }}-${{ matrix.dbal }}-${{ hashFiles('**/composer.json') }}
-          restore-keys: composer-${{ matrix.php }}-${{ matrix.dbal }}-
+          key: composer-${{ matrix.php }}-${{ matrix.laravel }}-${{ matrix.dbal }}-${{ hashFiles('**/composer.json') }}
+          restore-keys: composer-${{ matrix.php }}-${{ matrix.laravel }}-${{ matrix.dbal }}-
 
-      # Narrows the package's own `^3.8 || ^4.0` constraint to the major under test. The
+      # Narrows the package's own multi-major constraints to the combination under test. The
       # lock file is not committed, so `composer update` is the install here, not a bump.
-      - name: Pin the DBAL major under test
-        run: composer require --no-update "doctrine/dbal:${{ matrix.dbal }}"
+      - name: Pin the DBAL and Laravel majors under test
+        run: |
+          composer require --no-update "doctrine/dbal:${{ matrix.dbal }}"
+          composer require --no-update "illuminate/contracts:${{ matrix.laravel }}" "illuminate/support:${{ matrix.laravel }}"
+          composer require --dev --no-update "orchestra/testbench:${{ matrix.testbench }}"
 
       - name: Install dependencies
         run: composer update --prefer-dist --no-progress --no-interaction
