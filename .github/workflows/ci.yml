@@ -128,18 +128,16 @@ jobs:
         # DBAL 3 declares getName() abstract, DBAL 4 dropped it - and this package carries
         # one code base for both, so a green run on only one major proves nothing.
         dbal: [ '^3.8', '^4.0' ]
-        laravel: [ '^11.0', '^12.0', '^13.0' ]
+        laravel: [ '^12.0', '^13.0' ]
         include:
           # testbench majors track Laravel majors one-to-one, and its constraint has to be
           # pinned alongside illuminate/* or composer is free to pair the wrong two.
-          - laravel: '^11.0'
-            testbench: '^9.0'
           - laravel: '^12.0'
             testbench: '^10.0'
           - laravel: '^13.0'
             testbench: '^11.0'
         exclude:
-          # Laravel 13 requires PHP 8.3. The package still supports PHP 8.2 on Laravel 11/12.
+          # Laravel 13 requires PHP 8.3. The package still supports PHP 8.2 on Laravel 12.
           - php: '8.2'
             laravel: '^13.0'
 
