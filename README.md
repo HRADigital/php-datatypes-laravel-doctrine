@@ -1,62 +1,49 @@
 # php-datatypes-laravel-doctrine
 
-[![CI](https://github.com/HRADigital/php-datatypes-laravel-doctrine/actions/workflows/ci.yml/badge.svg)](https://github.com/HRADigital/php-datatypes-laravel-doctrine/actions/workflows/ci.yml)
-[![Latest Stable Version](https://poser.pugx.org/hradigital/php-datatypes-laravel-doctrine/v/stable)](https://packagist.org/packages/hradigital/php-datatypes-laravel-doctrine)
-[![License](https://poser.pugx.org/hradigital/php-datatypes-laravel-doctrine/license)](LICENSE)
+[![CI](https://github.com/HRADigital/php-datatypes-laravel-doctrine/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/HRADigital/php-datatypes-laravel-doctrine/actions/workflows/ci.yml)
+[![Release](https://github.com/HRADigital/php-datatypes-laravel-doctrine/actions/workflows/release.yml/badge.svg?branch=master)](https://github.com/HRADigital/php-datatypes-laravel-doctrine/actions/workflows/release.yml)
+[![Latest Release](https://img.shields.io/github/v/release/HRADigital/php-datatypes-laravel-doctrine)](https://github.com/HRADigital/php-datatypes-laravel-doctrine/releases)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/hradigital/php-datatypes-laravel-doctrine)](https://packagist.org/packages/hradigital/php-datatypes-laravel-doctrine)
+[![Total Downloads](https://img.shields.io/packagist/dt/hradigital/php-datatypes-laravel-doctrine)](https://packagist.org/packages/hradigital/php-datatypes-laravel-doctrine)
+[![PHP Version](https://img.shields.io/packagist/php-v/hradigital/php-datatypes-laravel-doctrine)](https://packagist.org/packages/hradigital/php-datatypes-laravel-doctrine)
+[![Laravel](https://img.shields.io/badge/Laravel-12%20%7C%2013-FF2D20?logo=laravel&logoColor=white)](https://laravel.com)
+[![PHPStan](https://img.shields.io/badge/PHPStan-level%206-brightgreen)](phpstan.neon.dist)
+[![Code Style](https://img.shields.io/badge/code%20style-PSR--12-blue)](phpcs.xml.dist)
+[![License](https://img.shields.io/github/license/HRADigital/php-datatypes-laravel-doctrine)](LICENSE)
+[![Last Commit](https://img.shields.io/github/last-commit/HRADigital/php-datatypes-laravel-doctrine)](https://github.com/HRADigital/php-datatypes-laravel-doctrine/commits/master)
+[![Open Issues](https://img.shields.io/github/issues/HRADigital/php-datatypes-laravel-doctrine)](https://github.com/HRADigital/php-datatypes-laravel-doctrine/issues)
+[![Contributors](https://img.shields.io/github/contributors/HRADigital/php-datatypes-laravel-doctrine)](https://github.com/HRADigital/php-datatypes-laravel-doctrine/graphs/contributors)
+[![Stars](https://img.shields.io/github/stars/HRADigital/php-datatypes-laravel-doctrine)](https://github.com/HRADigital/php-datatypes-laravel-doctrine/stargazers)
+[![Code Size](https://img.shields.io/github/languages/code-size/HRADigital/php-datatypes-laravel-doctrine)](https://github.com/HRADigital/php-datatypes-laravel-doctrine)
+[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
 
----
+This package lets a `hradigital/php-datatypes` object be the declared type of a Doctrine Entity
+attribute. Doctrine persists only the types it ships with, so an `EmailAddress`, a `Money` or an
+`Address` would otherwise have to be declared as a primitive and converted by hand on every read and
+write. It ships one Doctrine DBAL Type per Datatypes object, plus a Laravel Service Provider that
+registers them all, so the Entity holds the Value Object while the database still holds a plain,
+indexable, human-readable value.
 
-## What this package is
+- **Doctrine DBAL Types** - one per Datatypes object: `StrType`, `EmailAddressType`, `UrlType`,
+  `SlugType`, `DatetimeType`, `CurrencyType`, `MoneyType`, `AddressType` and the rest.
+- **Native PHP Types** - `NativeDateTimeType`, `NativeDateTimeImmutableType`,
+  `NativeDateIntervalType` and `NativeDateTimeZoneType`, so an Entity holding a plain `\DateTime`
+  maps under the same naming convention.
+- **Laravel Service Provider** - auto-discovered, registering every Type before any EntityManager
+  resolves a mapping. Nothing to publish, nothing to configure.
+- **One naming rule** - a Doctrine type name is always the Type class' own short name.
+- **Validation on the way in** - a Value Object's validation failure surfaces as a DBAL
+  `ConversionException`, so an invalid value is rejected rather than corrupting the column.
+- **Framework-optional** - the Types are plain DBAL Types with no framework dependency; the Service
+  Provider is a convenience.
 
-**It lets you use a [`hradigital/php-datatypes`](https://github.com/HRADigital/php-datatypes) object
-directly as the type of a Doctrine Entity attribute.**
-
-Doctrine only knows how to persist the types it ships with - `string`, `integer`, `datetime`, and so
-on. It has no idea what an `EmailAddress`, a `Money` or an `Address` is, so without help you are
-forced to declare those attributes as primitives, and to convert by hand on the way in and on the
-way out.
-
-This package closes that gap. It ships one **Doctrine DBAL Type** per Datatypes object, and a
-**Laravel Service Provider** that registers all of them for you. Your Entity holds the real Value
-Object; Doctrine reads and writes the column.
-
-```php
-// Without this package - the Entity holds a primitive, and every caller converts by hand.
-#[ORM\Column(type: 'string', length: 255)]
-private ?string $email = null;
-
-// With this package - the Entity holds the Value Object, validated and normalized.
-#[ORM\Column(type: 'EmailAddressType', nullable: true)]
-private ?EmailAddress $email = null;
-```
-
-Nothing else changes. `$user->getEmail()` now hands you an `EmailAddress`, with its
-`getUsername()` / `getDomain()` / `getTld()` accessors and its validation, and the database still
-holds a plain, indexable, human-readable `VARCHAR`.
-
-### Zero configuration
-
-Install it and the Types are usable. There is **nothing to publish, nothing to add to
-`config/app.php`, and nothing to add to your Doctrine config** - Laravel's package auto-discovery
-finds the Service Provider, and the Service Provider registers every Type before any EntityManager
-resolves a mapping.
-
-```bash
-composer require hradigital/php-datatypes-laravel-doctrine
-```
-
-That is the whole installation. Skip straight to [Usage](#usage).
-
-### What this package is not
+## What this package is not
 
 - **Not a fork or a replacement** for `hradigital/php-datatypes`. It depends on it and adds
   persistence, nothing more. The Value Objects' behaviour, validation and API are entirely theirs.
 - **Not an ORM, and not a set of Entities.** It contributes column types. Your Entities, mappings
   and repositories stay yours.
-- **Not Laravel-only.** The Types are plain DBAL Types with no framework dependency; the Laravel
-  Service Provider is a convenience. See [Using it outside Laravel](#using-it-outside-laravel).
-
----
+- **Not Laravel-only.** See [Using it outside Laravel](#using-it-outside-laravel).
 
 ## Requirements
 
@@ -76,7 +63,34 @@ A Doctrine ORM integration for Laravel - typically
 Entities in the first place. This package does not require it: it registers into Doctrine's own
 global Type registry, which every integration reads from.
 
----
+## Zero configuration
+
+Install it and the Types are usable. There is **nothing to publish, nothing to add to
+`config/app.php`, and nothing to add to your Doctrine config** - Laravel's package auto-discovery
+finds the Service Provider, and the Service Provider registers every Type before any EntityManager
+resolves a mapping.
+
+```bash
+composer require hradigital/php-datatypes-laravel-doctrine
+```
+
+That is the whole installation. Skip straight to [Usage](#usage).
+
+## At a glance
+
+```php
+// Without this package - the Entity holds a primitive, and every caller converts by hand.
+#[ORM\Column(type: 'string', length: 255)]
+private ?string $email = null;
+
+// With this package - the Entity holds the Value Object, validated and normalized.
+#[ORM\Column(type: 'EmailAddressType', nullable: true)]
+private ?EmailAddress $email = null;
+```
+
+Nothing else changes. `$user->getEmail()` now hands you an `EmailAddress`, with its
+`getUsername()` / `getDomain()` / `getTld()` accessors and its validation, and the database still
+holds a plain, indexable, human-readable `VARCHAR`.
 
 ## Usage
 
@@ -146,8 +160,6 @@ short name with the Datatypes classes outright, and `\DateTime` differs from Dat
 by a single capital letter. Without the prefix, a mapping would be one keystroke away from silently
 selecting the wrong Type.
 
----
-
 ## Type reference
 
 ### Datatypes library
@@ -194,8 +206,6 @@ application already handles - and an invalid value is rejected on the way *in* r
 corrupting the column. An unknown currency code, a relative URL, a slug with spaces and an unknown
 timezone identifier all fail loudly.
 
----
-
 ## Datatypes deliberately without a Type
 
 Not every object in the Datatypes library is a *column*. These have no Type, on purpose:
@@ -207,8 +217,6 @@ Not every object in the Datatypes library is a *column*. These have no Type, on 
 | `Exceptions\*` | Control flow, not data. |
 | `Attributes\*` traits, `ValueObjects\Traits\*` | Traits that shape a class' behaviour; they have no value of their own to store. |
 | `ValueObjects\AbstractValueObject` | Abstract - the concrete Value Objects that extend it get their own mapping. |
-
----
 
 ## Multi-field Value Objects
 
@@ -244,7 +252,32 @@ public function getTotal(): Money
 
 Note that `CurrencyType` is useful on its own in exactly that split mapping.
 
----
+## Configuration (optional)
+
+You do not need this. It exists for the two cases where the defaults do not fit: renaming a Type
+whose name clashes with another package's, and turning a Type off.
+
+```bash
+php artisan vendor:publish --tag=datatypes-doctrine-config
+```
+
+That writes `config/datatypes-doctrine.php`:
+
+```php
+return [
+    // Turns the whole package off without uninstalling it.
+    'enabled' => true,
+
+    // Doctrine type name => Type class.
+    'types' => DoctrineTypes::defaults(),
+];
+```
+
+Rename a Type by changing its key; drop one by removing its entry.
+
+**A name already claimed by another package is never overwritten.** The first registration wins and
+this package steps aside, because silently swapping another package's Type would corrupt its
+columns. Renaming here is the supported way to resolve a clash.
 
 ## Platform notes
 
@@ -274,37 +307,6 @@ private string $urlHash;   // populated from $this->url->getHash()
 The same MySQL platform renders a JSON column as `LONGTEXT` on DBAL 3 and as `JSON` on DBAL 4. Both
 are correct for their major; the stored document is identical either way.
 
----
-
-## Configuration (optional)
-
-You do not need this. It exists for the two cases where the defaults do not fit: renaming a Type
-whose name clashes with another package's, and turning a Type off.
-
-```bash
-php artisan vendor:publish --tag=datatypes-doctrine-config
-```
-
-That writes `config/datatypes-doctrine.php`:
-
-```php
-return [
-    // Turns the whole package off without uninstalling it.
-    'enabled' => true,
-
-    // Doctrine type name => Type class.
-    'types' => DoctrineTypes::defaults(),
-];
-```
-
-Rename a Type by changing its key; drop one by removing its entry.
-
-**A name already claimed by another package is never overwritten.** The first registration wins and
-this package steps aside, because silently swapping another package's Type would corrupt its
-columns. Renaming here is the supported way to resolve a clash.
-
----
-
 ## Using it outside Laravel
 
 The Types are plain `Doctrine\DBAL\Types\Type` subclasses with no framework dependency. Register
@@ -323,8 +325,6 @@ foreach (DoctrineTypes::defaults() as $name => $class) {
 
 `DoctrineTypes::datatypes()` and `DoctrineTypes::natives()` return the two halves separately, if you
 want only one of them.
-
----
 
 ## Development
 
@@ -369,14 +369,11 @@ release workflow computes the next version and cuts a tag with generated notes.
 |---|---|
 | `BREAKING CHANGE:` footer | major |
 | `feat` | minor |
-| `build`, `fix`, `perf`, `refactor`, `revert` | patch |
-| `chore`, `ci`, `docs`, `style`, `test` | no release |
+| everything else, including `build`, `chore`, `ci`, `docs`, `fix`, `perf`, `refactor`, `revert`, `style`, `test` | patch |
 
-Only changes to shipped code earn a version - a docs-only push must not burn one. A breaking change
-needs the **footer**, on its own line after a blank line; a `feat!:` suffix alone does **not** cut a
-major.
-
----
+Every commit that lands on `master` ships a version - the version identifies the state of the
+project, so there is no "no release" bucket. A breaking change needs the **footer**, on its own line
+after a blank line; a `feat!:` suffix alone does **not** cut a major.
 
 ## Licence
 
