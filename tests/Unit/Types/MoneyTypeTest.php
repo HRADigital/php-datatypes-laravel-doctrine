@@ -79,6 +79,13 @@ class MoneyTypeTest extends AbstractTypeTestCase
         $this->assertSame('1500', $restored->toDecimal());
     }
 
+    public function testMoneyAlreadyRehydratedPassesThroughUntouched(): void
+    {
+        $money = Money::fromDecimal('1.00', Currency::EUR);
+
+        $this->assertSame($money, $this->type->convertToPHPValue($money, $this->platform));
+    }
+
     public function testNullPassesThroughUntouchedInBothDirections(): void
     {
         $this->assertNull($this->type->convertToDatabaseValue(null, $this->platform));

@@ -116,6 +116,20 @@ class DatetimeTypesTest extends AbstractTypeTestCase
         $this->assertNull($type->convertToPHPValue(null, $this->platform));
     }
 
+    public function testADatatypeAlreadyRehydratedPassesThroughUntouched(): void
+    {
+        $datetime = Datetime::fromString('2026-05-27 14:32:11');
+
+        $this->assertSame($datetime, (new DatetimeType())->convertToPHPValue($datetime, $this->platform));
+    }
+
+    public function testRejectsANonStringColumnValue(): void
+    {
+        $this->expectException(ConversionException::class);
+
+        (new DatetimeType())->convertToPHPValue(20260527, $this->platform);
+    }
+
     public function testRejectsAValueItCannotPersist(): void
     {
         $this->expectException(ConversionException::class);

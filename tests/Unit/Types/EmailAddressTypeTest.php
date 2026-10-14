@@ -112,4 +112,18 @@ class EmailAddressTypeTest extends AbstractTypeTestCase
 
         $this->type->convertToDatabaseValue(42, $this->platform);
     }
+
+    public function testAnAddressAlreadyRehydratedPassesThroughUntouched(): void
+    {
+        $email = EmailAddress::create('someone@example.com');
+
+        $this->assertSame($email, $this->type->convertToPHPValue($email, $this->platform));
+    }
+
+    public function testRejectsANonStringColumnValue(): void
+    {
+        $this->expectException(ConversionException::class);
+
+        $this->type->convertToPHPValue(42, $this->platform);
+    }
 }

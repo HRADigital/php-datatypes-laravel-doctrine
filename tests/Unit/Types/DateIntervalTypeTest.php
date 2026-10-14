@@ -94,6 +94,20 @@ class DateIntervalTypeTest extends AbstractTypeTestCase
         $this->type->convertToDatabaseValue('P1D', $this->platform);
     }
 
+    public function testADatatypeAlreadyRehydratedPassesThroughUntouched(): void
+    {
+        $interval = DateInterval::fromDays(3);
+
+        $this->assertSame($interval, $this->type->convertToPHPValue($interval, $this->platform));
+    }
+
+    public function testRejectsANonStringColumnValue(): void
+    {
+        $this->expectException(ConversionException::class);
+
+        $this->type->convertToPHPValue(3, $this->platform);
+    }
+
     public function testAMalformedRowSurfacesAsAConversionFailure(): void
     {
         $this->expectException(ConversionException::class);

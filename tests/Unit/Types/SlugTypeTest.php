@@ -74,4 +74,30 @@ class SlugTypeTest extends AbstractTypeTestCase
 
         $this->type->convertToPHPValue('Not A Slug', $this->platform);
     }
+
+    public function testAcceptsAValidSlugAsANativeString(): void
+    {
+        $this->assertSame('a-first-post', $this->type->convertToDatabaseValue('a-first-post', $this->platform));
+    }
+
+    public function testASlugAlreadyRehydratedPassesThroughUntouched(): void
+    {
+        $slug = Slug::create('a-first-post');
+
+        $this->assertSame($slug, $this->type->convertToPHPValue($slug, $this->platform));
+    }
+
+    public function testRejectsAValueItCannotPersist(): void
+    {
+        $this->expectException(ConversionException::class);
+
+        $this->type->convertToDatabaseValue(42, $this->platform);
+    }
+
+    public function testRejectsANonStringColumnValue(): void
+    {
+        $this->expectException(ConversionException::class);
+
+        $this->type->convertToPHPValue(42, $this->platform);
+    }
 }

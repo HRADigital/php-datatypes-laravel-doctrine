@@ -53,6 +53,30 @@ class CurrencyTypeTest extends AbstractTypeTestCase
         $this->assertSame(Currency::JPY, $restored);
     }
 
+    public function testAcceptsTheCodeAsANativeString(): void
+    {
+        $this->assertSame('USD', $this->type->convertToDatabaseValue('USD', $this->platform));
+    }
+
+    public function testACaseAlreadyRehydratedPassesThroughUntouched(): void
+    {
+        $this->assertSame(Currency::EUR, $this->type->convertToPHPValue(Currency::EUR, $this->platform));
+    }
+
+    public function testRejectsAValueItCannotPersist(): void
+    {
+        $this->expectException(ConversionException::class);
+
+        $this->type->convertToDatabaseValue(978, $this->platform);
+    }
+
+    public function testRejectsANonStringColumnValue(): void
+    {
+        $this->expectException(ConversionException::class);
+
+        $this->type->convertToPHPValue(978, $this->platform);
+    }
+
     public function testNullPassesThroughUntouchedInBothDirections(): void
     {
         $this->assertNull($this->type->convertToDatabaseValue(null, $this->platform));

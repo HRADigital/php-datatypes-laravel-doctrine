@@ -66,6 +66,40 @@ class DateTimeZoneTypeTest extends AbstractTypeTestCase
         $this->assertSame('UTC', $stored);
     }
 
+    public function testAcceptsTheIdentifierAsANativeString(): void
+    {
+        $this->assertSame('Europe/Lisbon', $this->type->convertToDatabaseValue('Europe/Lisbon', $this->platform));
+    }
+
+    public function testANativeInstanceComesBackAsTheDatatype(): void
+    {
+        $restored = $this->type->convertToPHPValue(new NativeDateTimeZone('Atlantic/Azores'), $this->platform);
+
+        $this->assertInstanceOf(DateTimeZone::class, $restored);
+        $this->assertSame('Atlantic/Azores', $restored->getName());
+    }
+
+    public function testADatatypeAlreadyRehydratedPassesThroughUntouched(): void
+    {
+        $timezone = new DateTimeZone('UTC');
+
+        $this->assertSame($timezone, $this->type->convertToPHPValue($timezone, $this->platform));
+    }
+
+    public function testRejectsAValueItCannotPersist(): void
+    {
+        $this->expectException(ConversionException::class);
+
+        $this->type->convertToDatabaseValue(1, $this->platform);
+    }
+
+    public function testRejectsANonStringColumnValue(): void
+    {
+        $this->expectException(ConversionException::class);
+
+        $this->type->convertToPHPValue(1, $this->platform);
+    }
+
     public function testNullPassesThroughUntouchedInBothDirections(): void
     {
         $this->assertNull($this->type->convertToDatabaseValue(null, $this->platform));

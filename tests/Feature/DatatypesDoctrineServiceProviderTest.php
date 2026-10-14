@@ -18,8 +18,10 @@ use HraDigital\Components\DatatypesDoctrine\DoctrineTypes;
 use HraDigital\Components\DatatypesDoctrine\Types\EmailAddressType;
 use HraDigital\Components\DatatypesDoctrine\Types\MoneyType;
 use HraDigital\Components\DatatypesDoctrine\Types\NifType;
+use HraDigital\Components\DatatypesDoctrine\Types\StrType;
 use Illuminate\Foundation\Application;
 use Orchestra\Testbench\TestCase;
+use stdClass;
 
 /**
  * Proves the package's central promise: install it, and every Type is usable in an Entity
@@ -90,6 +92,62 @@ class DatatypesDoctrineServiceProviderTest extends TestCase
         // The application's own entry survives - first registration wins.
         $this->assertSame(MoneyType::class, $custom['ExistingType']);
         $this->assertSame(EmailAddressType::class, $custom['EmailAddressType']);
+    }
+
+    public function testTheSwitchTurnsTheWholePackageOff(): void
+    {
+        $this->app['config']->set('datatypes-doctrine.enabled', false);
+        $this->app['config']->set('datatypes-doctrine.types', ['DisabledProbeType' => StrType::class]);
+
+        (new DatatypesDoctrineServiceProvider($this->app))->register();
+
+        $this->assertFalse(Type::hasType('DisabledProbeType'));
+    }
+
+    public function testUnusableEntriesInAPublishedMapAreSkippedRatherThanBreakingTheBoot(): void
+    {
+        $this->app['config']->set('datatypes-doctrine.types', [
+            'MissingClassProbeType' => 'App\\Doctrine\\NoSuchType',
+            'ForeignClassProbeType' => stdClass::class,
+            ''                      => StrType::class,
+            'ValidProbeType'        => StrType::class,
+        ]);
+
+        (new DatatypesDoctrineServiceProvider($this->app))->register();
+
+        $this->assertFalse(Type::hasType('MissingClassProbeType'));
+        $this->assertFalse(Type::hasType('ForeignClassProbeType'));
+        $this->assertFalse(Type::hasType(''));
+        $this->assertInstanceOf(StrType::class, Type::getType('ValidProbeType'));
+    }
+
+    public function testANameAlreadyTakenIsNeverOverwritten(): void
+    {
+        // Swapping another registration's Type would corrupt the columns mapped with it.
+        $this->app['config']->set('datatypes-doctrine.types', ['StrType' => EmailAddressType::class]);
+
+        (new DatatypesDoctrineServiceProvider($this->app))->register();
+
+        $this->assertInstanceOf(StrType::class, Type::getType('StrType'));
+    }
+
+    public function testAMapThatIsNotAnArrayFallsBackToTheDefaults(): void
+    {
+        $this->app['config']->set('datatypes-doctrine.types', 'not a map');
+        $this->app['config']->set('doctrine.custom_types', []);
+
+        (new DatatypesDoctrineServiceProvider($this->app))->register();
+
+        $this->assertSame(DoctrineTypes::defaults(), $this->app['config']->get('doctrine.custom_types'));
+    }
+
+    public function testAMalformedLaravelDoctrineTypeListIsReplacedByTheMap(): void
+    {
+        $this->app['config']->set('doctrine.custom_types', 'not a list');
+
+        (new DatatypesDoctrineServiceProvider($this->app))->register();
+
+        $this->assertSame(DoctrineTypes::defaults(), $this->app['config']->get('doctrine.custom_types'));
     }
 
     public function testRegisteringTwiceInTheSameProcessIsHarmless(): void

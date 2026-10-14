@@ -16,6 +16,10 @@ use Doctrine\DBAL\Types\ConversionException;
 use HraDigital\Components\DatatypesDoctrine\Types\AddressType;
 use HraDigital\Datatypes\ValueObjects\Address;
 
+use function fopen;
+use function fwrite;
+use function rewind;
+
 class AddressTypeTest extends AbstractTypeTestCase
 {
     private AddressType $type;
@@ -106,5 +110,33 @@ class AddressTypeTest extends AbstractTypeTestCase
         $this->expectException(ConversionException::class);
 
         $this->type->convertToPHPValue('"just a string"', $this->platform);
+    }
+
+    public function testReadsADocumentHandedBackAsAStream(): void
+    {
+        // Some drivers (notably PostgreSQL through PDO) return JSON columns as a resource.
+        $stream = fopen('php://memory', 'r+');
+        $this->assertIsResource($stream);
+        fwrite($stream, '{"street":"Rua das Flores 12","postal_code":"1000-001","city":"Lisboa","country":"PT"}');
+        rewind($stream);
+
+        $restored = $this->type->convertToPHPValue($stream, $this->platform);
+
+        $this->assertInstanceOf(Address::class, $restored);
+        $this->assertSame('Lisboa', $restored->getCity());
+    }
+
+    public function testAnAddressAlreadyRehydratedPassesThroughUntouched(): void
+    {
+        $address = new Address('Rua das Flores 12', '1000-001', 'Lisboa', 'PT');
+
+        $this->assertSame($address, $this->type->convertToPHPValue($address, $this->platform));
+    }
+
+    public function testRejectsAColumnValueThatIsNeitherAStringNorAStream(): void
+    {
+        $this->expectException(ConversionException::class);
+
+        $this->type->convertToPHPValue(42, $this->platform);
     }
 }

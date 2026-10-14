@@ -80,4 +80,25 @@ class UrlTypeTest extends AbstractTypeTestCase
 
         $this->type->convertToPHPValue('not a url', $this->platform);
     }
+
+    public function testAUrlAlreadyRehydratedPassesThroughUntouched(): void
+    {
+        $url = Url::create('https://example.com/');
+
+        $this->assertSame($url, $this->type->convertToPHPValue($url, $this->platform));
+    }
+
+    public function testRejectsAValueItCannotPersist(): void
+    {
+        $this->expectException(ConversionException::class);
+
+        $this->type->convertToDatabaseValue(42, $this->platform);
+    }
+
+    public function testRejectsANonStringColumnValue(): void
+    {
+        $this->expectException(ConversionException::class);
+
+        $this->type->convertToPHPValue(42, $this->platform);
+    }
 }
