@@ -25,6 +25,8 @@ use HraDigital\Components\DatatypesDoctrine\Types\NativeDateIntervalType;
 use HraDigital\Components\DatatypesDoctrine\Types\NativeDateTimeImmutableType;
 use HraDigital\Components\DatatypesDoctrine\Types\NativeDateTimeType;
 use HraDigital\Components\DatatypesDoctrine\Types\NativeDateTimeZoneType;
+use HraDigital\Components\DatatypesDoctrine\Types\NifType;
+use HraDigital\Components\DatatypesDoctrine\Types\NifTypeType;
 use HraDigital\Components\DatatypesDoctrine\Types\SlugType;
 use HraDigital\Components\DatatypesDoctrine\Types\StrType;
 use HraDigital\Components\DatatypesDoctrine\Types\TimeType;
@@ -84,6 +86,10 @@ final class DoctrineTypes
             // Financial.
             CurrencyType::NAME     => CurrencyType::class,
             MoneyType::NAME        => MoneyType::class,
+
+            // Fiscal.
+            NifType::NAME          => NifType::class,
+            NifTypeType::NAME      => NifTypeType::class,
 
             // Value Objects.
             AddressType::NAME      => AddressType::class,

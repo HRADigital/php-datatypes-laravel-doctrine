@@ -17,6 +17,7 @@ use HraDigital\Components\DatatypesDoctrine\DatatypesDoctrineServiceProvider;
 use HraDigital\Components\DatatypesDoctrine\DoctrineTypes;
 use HraDigital\Components\DatatypesDoctrine\Types\EmailAddressType;
 use HraDigital\Components\DatatypesDoctrine\Types\MoneyType;
+use HraDigital\Components\DatatypesDoctrine\Types\NifType;
 use Illuminate\Foundation\Application;
 use Orchestra\Testbench\TestCase;
 
@@ -54,6 +55,7 @@ class DatatypesDoctrineServiceProviderTest extends TestCase
         // This is exactly what `#[ORM\Column(type: 'EmailAddressType')]` resolves through.
         $this->assertInstanceOf(EmailAddressType::class, Type::getType('EmailAddressType'));
         $this->assertInstanceOf(MoneyType::class, Type::getType('MoneyType'));
+        $this->assertInstanceOf(NifType::class, Type::getType('NifType'));
     }
 
     public function testThePackageConfigIsMergedInWithoutBeingPublished(): void

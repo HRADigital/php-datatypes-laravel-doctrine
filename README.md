@@ -50,7 +50,7 @@ indexable, human-readable value.
 | Requirement | Supported |
 |---|---|
 | PHP | 8.2, 8.3, 8.4 |
-| `hradigital/php-datatypes` | ^3.0 |
+| `hradigital/php-datatypes` | ^3.2 |
 | `doctrine/dbal` | ^3.8, ^4.0 |
 | Laravel (`illuminate/*`) | 12, 13 |
 
@@ -154,6 +154,9 @@ private ?DateTime $lastLoginAt = null;
 `type: 'SlugType'`. There is no prefix to remember and no lookup table to consult - if you know the
 Value Object, you know the mapping.
 
+The rule holds even where it reads oddly: `Nif` maps with `type: 'NifType'`, so the
+`Fiscal\NifType` enum maps with `type: 'NifTypeType'`.
+
 The four Types covering **native PHP** classes carry a `Native` prefix, because three of them would
 otherwise collide with a Datatypes class: PHP's `\DateInterval` and `\DateTimeZone` share their
 short name with the Datatypes classes outright, and `\DateTime` differs from Datatypes' `Datetime`
@@ -178,6 +181,8 @@ selecting the wrong Type.
 | `DateTimeZoneType` | `…\Datetime\DateTimeZone` | `VARCHAR(64)` | IANA identifier, never a fixed offset. |
 | `CurrencyType` | `…\Financial\Currency` | `CHAR(3)` | ISO-4217 code. An unknown code fails rather than loading as `null`. |
 | `MoneyType` | `…\Financial\Money` | `JSON` | `{"amount": <minor units, integer>, "currency": "<code>"}`. See [Multi-field Value Objects](#multi-field-value-objects). |
+| `NifType` | `…\Fiscal\Nif` | `CHAR(9)` | Portuguese tax number. Stores the nine digits with whitespace removed; a wrong check digit fails. |
+| `NifTypeType` | `…\Fiscal\NifType` | `VARCHAR(32)` | The enum's backing value. An unknown value fails rather than loading as `null`. |
 | `AddressType` | `…\ValueObjects\Address` | `JSON` | `{"street", "postal_code", "city", "country"}`. See [Multi-field Value Objects](#multi-field-value-objects). |
 
 ### Native PHP classes
