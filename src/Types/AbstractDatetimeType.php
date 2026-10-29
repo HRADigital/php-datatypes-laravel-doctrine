@@ -12,23 +12,26 @@ declare(strict_types=1);
 
 namespace HraDigital\Components\DatatypesDoctrine\Types;
 
+use DateTimeImmutable as NativeDateTimeImmutable;
 use DateTimeInterface;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use HraDigital\Components\DatatypesDoctrine\Exceptions\DatatypeConversionException;
-use HraDigital\Datatypes\Datetime\Datetime;
+use HraDigital\Datatypes\Datetime\DatetimeContract;
 use Throwable;
 
 use function is_string;
 
 /**
- * Shared conversion for every Type that rehydrates a HraDigital\Datatypes\Datetime\Datetime.
+ * Shared conversion for every Type that rehydrates a HraDigital\Datatypes\Datetime\DateTime or
+ * HraDigital\Datatypes\Datetime\DateTimeImmutable.
  *
- * The four concrete Types differ only in which platform format string and which column
- * declaration they use - date, time, datetime, datetime with timezone - so all of the
- * conversion logic lives here and each subclass answers two questions.
+ * The concrete Types differ only in which Datatypes class they rehydrate, which platform format
+ * string and which column declaration they use - date, time, datetime, datetime with timezone -
+ * so all of the conversion logic lives here and each subclass answers those questions.
  *
- * Datetime extends \DateTimeImmutable, so a Datetime the ORM never touched round-trips
- * unchanged and any \DateTimeInterface a caller assigns is still persistable.
+ * Neither Datatypes class is a native \DateTimeInterface - each one wraps a native
+ * \DateTimeImmutable - so a value crosses into and out of the Datatype through `fromNative()`.
+ * Any native \DateTimeInterface a caller assigns is still persistable.
  *
  * @package   HraDigital\Components\DatatypesDoctrine
  * @copyright HraDigital\Components\DatatypesDoctrine
@@ -36,6 +39,13 @@ use function is_string;
  */
 abstract class AbstractDatetimeType extends AbstractDatatypeType
 {
+    /**
+     * The Datatypes class this Type rehydrates.
+     *
+     * @return class-string<DatetimeContract>
+     */
+    abstract protected function datatypeClass(): string;
+
     /**
      * The platform's format string for this Type's column - eg. `Y-m-d H:i:s`.
      */
@@ -46,7 +56,7 @@ abstract class AbstractDatetimeType extends AbstractDatatypeType
      *
      * True for the partial columns (date, time): parsing `Y-m-d` without resetting leaves
      * the current wall-clock time in the hour/minute/second fields, so two reads of the very
-     * same DATE column would produce two non-equal Datetime instances.
+     * same DATE column would produce two non-equal instances.
      */
     protected function resetsUnparsedFields(): bool
     {
@@ -59,25 +69,32 @@ abstract class AbstractDatetimeType extends AbstractDatatypeType
             return null;
         }
 
-        if ($value instanceof DateTimeInterface) {
+        if ($value instanceof DatetimeContract || $value instanceof DateTimeInterface) {
             return $value->format($this->formatString($platform));
         }
 
         throw DatatypeConversionException::fromInvalidPhpValue(
             $value,
             static::NAME,
-            ['null', Datetime::class, DateTimeInterface::class]
+            ['null', DatetimeContract::class, DateTimeInterface::class]
         );
     }
 
-    public function convertToPHPValue(mixed $value, AbstractPlatform $platform): ?Datetime
+    public function convertToPHPValue(mixed $value, AbstractPlatform $platform): ?DatetimeContract
     {
-        if ($value === null || $value instanceof Datetime) {
+        $class = $this->datatypeClass();
+
+        if ($value === null || $value instanceof $class) {
             return $value;
         }
 
+        // The other Datatypes class - a DateTime handed to an immutable column, or the reverse.
+        if ($value instanceof DatetimeContract) {
+            return $class::fromNative($value->toNative());
+        }
+
         if ($value instanceof DateTimeInterface) {
-            return Datetime::fromString($value->format(Datetime::START_FORMAT));
+            return $class::fromNative($value);
         }
 
         if (!is_string($value)) {
@@ -88,18 +105,17 @@ abstract class AbstractDatetimeType extends AbstractDatatypeType
             ? '!' . $this->formatString($platform)
             : $this->formatString($platform);
 
-        // createFromFormat is tried first so the platform's own format wins; it returns an
-        // instance of the called class, hence a Datetime rather than a bare DateTimeImmutable.
-        $parsed = Datetime::createFromFormat($format, $value);
+        // createFromFormat is tried first so the platform's own format wins.
+        $parsed = NativeDateTimeImmutable::createFromFormat($format, $value);
 
-        if ($parsed instanceof Datetime) {
-            return $parsed;
+        if ($parsed instanceof NativeDateTimeImmutable) {
+            return $class::fromNative($parsed);
         }
 
         // Falls back to free parsing - drivers do not always hand back the exact platform
         // format (fractional seconds, differing timezone offsets).
         try {
-            return Datetime::fromString($value);
+            return $class::fromString($value);
         } catch (Throwable $e) {
             throw DatatypeConversionException::fromInvalidDatabaseValue($value, static::NAME, $e);
         }

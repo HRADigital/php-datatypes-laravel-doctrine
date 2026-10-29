@@ -13,9 +13,10 @@ declare(strict_types=1);
 namespace HraDigital\Components\DatatypesDoctrine\Types;
 
 use Doctrine\DBAL\Platforms\AbstractPlatform;
+use HraDigital\Datatypes\Datetime\DateTime;
 
 /**
- * Maps HraDigital\Datatypes\Datetime\Datetime onto a TIME column.
+ * Maps HraDigital\Datatypes\Datetime\DateTime onto a TIME column.
  *
  * The date part resets to the epoch on read, so the same stored time always rehydrates to the
  * same instant - see AbstractDatetimeType::resetsUnparsedFields().
@@ -32,6 +33,11 @@ class TimeType extends AbstractDatetimeType
     public function getSQLDeclaration(array $column, AbstractPlatform $platform): string
     {
         return $platform->getTimeTypeDeclarationSQL($column);
+    }
+
+    protected function datatypeClass(): string
+    {
+        return DateTime::class;
     }
 
     protected function formatString(AbstractPlatform $platform): string

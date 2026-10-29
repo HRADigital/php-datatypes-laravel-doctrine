@@ -30,8 +30,8 @@ class NativeTypesTest extends AbstractTypeTestCase
 {
     public function testEachNameCarriesTheNativePrefix(): void
     {
-        // The prefix is load-bearing: \DateInterval and \DateTimeZone share their short name
-        // with a Datatypes class outright, and \DateTime differs from Datetime by one capital.
+        // The prefix is load-bearing: every one of the four native classes shares its short
+        // name with a Datatypes class.
         $this->assertSame('NativeDateTimeType', NativeDateTimeType::NAME);
         $this->assertSame('NativeDateTimeImmutableType', NativeDateTimeImmutableType::NAME);
         $this->assertSame('NativeDateIntervalType', NativeDateIntervalType::NAME);

@@ -25,7 +25,8 @@ registers them all, so the Entity holds the Value Object while the database stil
 indexable, human-readable value.
 
 - **Doctrine DBAL Types** - one per Datatypes object: `StrType`, `EmailAddressType`, `UrlType`,
-  `SlugType`, `DatetimeType`, `CurrencyType`, `MoneyType`, `AddressType` and the rest.
+  `SlugType`, `DateTimeType`, `DateTimeImmutableType`, `CurrencyType`, `MoneyType`, `AddressType`
+  and the rest.
 - **Native PHP Types** - `NativeDateTimeType`, `NativeDateTimeImmutableType`,
   `NativeDateIntervalType` and `NativeDateTimeZoneType`, so an Entity holding a plain `\DateTime`
   maps under the same naming convention.
@@ -50,7 +51,7 @@ indexable, human-readable value.
 | Requirement | Supported |
 |---|---|
 | PHP | 8.2, 8.3, 8.4 |
-| `hradigital/php-datatypes` | ^3.2 |
+| `hradigital/php-datatypes` | ^3.3 |
 | `doctrine/dbal` | ^3.8, ^4.0 |
 | Laravel (`illuminate/*`) | 12, 13 |
 
@@ -101,7 +102,7 @@ Doctrine type name.
 
 ```php
 use Doctrine\ORM\Mapping as ORM;
-use HraDigital\Datatypes\Datetime\Datetime;
+use HraDigital\Datatypes\Datetime\DateTimeImmutable;
 use HraDigital\Datatypes\Financial\Money;
 use HraDigital\Datatypes\ValueObjects\Address;
 use HraDigital\Datatypes\Web\EmailAddress;
@@ -128,8 +129,8 @@ class Customer
     #[ORM\Column(type: 'MoneyType')]
     private Money $lifetimeValue;
 
-    #[ORM\Column(type: 'DatetimeType')]
-    private Datetime $registeredAt;
+    #[ORM\Column(type: 'DateTimeImmutableType')]
+    private DateTimeImmutable $registeredAt;
 }
 ```
 
@@ -137,14 +138,14 @@ class Customer
 
 ```php
 /**
- * @ORM\Column(type="DatetimeType", name="date_of_birth", nullable=true)
+ * @ORM\Column(type="DateImmutableType", name="date_of_birth", nullable=true)
  */
-private ?Datetime $dateOfBirth = null;
+private ?DateTimeImmutable $dateOfBirth = null;
 
 /**
  * @ORM\Column(type="NativeDateTimeType", name="last_login_at", nullable=true)
  */
-private ?DateTime $lastLoginAt = null;
+private ?\DateTime $lastLoginAt = null;
 ```
 
 ### The naming rule
@@ -157,11 +158,14 @@ Value Object, you know the mapping.
 The rule holds even where it reads oddly: `Nif` maps with `type: 'NifType'`, so the
 `Fiscal\NifType` enum maps with `type: 'NifTypeType'`.
 
-The four Types covering **native PHP** classes carry a `Native` prefix, because three of them would
-otherwise collide with a Datatypes class: PHP's `\DateInterval` and `\DateTimeZone` share their
-short name with the Datatypes classes outright, and `\DateTime` differs from Datatypes' `Datetime`
-by a single capital letter. Without the prefix, a mapping would be one keystroke away from silently
-selecting the wrong Type.
+The date and time Types that store only part of a value follow Doctrine's own naming: the column
+kind, then `Immutable` for the `DateTimeImmutable` class. A `DateTime` maps with `DateTimeType`,
+`DateTimeTzType`, `DateType` or `TimeType`; a `DateTimeImmutable` maps with `DateTimeImmutableType`,
+`DateTimeTzImmutableType`, `DateImmutableType` or `TimeImmutableType`.
+
+The four Types covering **native PHP** classes carry a `Native` prefix, because every one of them
+shares its short name with a Datatypes class: `\DateTime`, `\DateTimeImmutable`, `\DateInterval`
+and `\DateTimeZone`. Without the prefix, the two Types would need the very same name.
 
 ## Type reference
 
@@ -173,10 +177,14 @@ selecting the wrong Type.
 | `EmailAddressType` | `…\Web\EmailAddress` | `VARCHAR(255)` | Stores the case-normalized address, so equal addresses compare equal in SQL. |
 | `UrlType` | `…\Web\Url` | `VARCHAR(2048)` | Stores the normalized URL. See [Indexing a URL](#indexing-a-url). |
 | `SlugType` | `…\Web\Seo\Slug` | `VARCHAR(191)` | 191, not 255 - the widest utf8mb4 column InnoDB accepts in a single-column UNIQUE index. |
-| `DatetimeType` | `…\Datetime\Datetime` | `DATETIME` | |
-| `DatetimeTzType` | `…\Datetime\Datetime` | `DATETIME` / `TIMESTAMPTZ` | Only some platforms store the offset. See [Timezones](#timezones). |
-| `DateType` | `…\Datetime\Datetime` | `DATE` | Time resets to midnight on read. |
-| `TimeType` | `…\Datetime\Datetime` | `TIME` | Date resets to the epoch on read. |
+| `DateTimeType` | `…\Datetime\DateTime` | `DATETIME` | |
+| `DateTimeTzType` | `…\Datetime\DateTime` | `DATETIME` / `TIMESTAMPTZ` | Only some platforms store the offset. See [Timezones](#timezones). |
+| `DateType` | `…\Datetime\DateTime` | `DATE` | Time resets to midnight on read. |
+| `TimeType` | `…\Datetime\DateTime` | `TIME` | Date resets to the epoch on read. |
+| `DateTimeImmutableType` | `…\Datetime\DateTimeImmutable` | `DATETIME` | |
+| `DateTimeTzImmutableType` | `…\Datetime\DateTimeImmutable` | `DATETIME` / `TIMESTAMPTZ` | Only some platforms store the offset. See [Timezones](#timezones). |
+| `DateImmutableType` | `…\Datetime\DateTimeImmutable` | `DATE` | Time resets to midnight on read. |
+| `TimeImmutableType` | `…\Datetime\DateTimeImmutable` | `TIME` | Date resets to the epoch on read. |
 | `DateIntervalType` | `…\Datetime\DateInterval` | `VARCHAR(64)` | ISO-8601 duration, `-` prefixed when inverted. |
 | `DateTimeZoneType` | `…\Datetime\DateTimeZone` | `VARCHAR(64)` | IANA identifier, never a fixed offset. |
 | `CurrencyType` | `…\Financial\Currency` | `CHAR(3)` | ISO-4217 code. An unknown code fails rather than loading as `null`. |
@@ -219,6 +227,8 @@ Not every object in the Datatypes library is a *column*. These have no Type, on 
 |---|---|
 | `ValueObjects\Pagination` | A request-scoped query parameter, not entity state. It is never persisted. |
 | `Collections\*` (`Store`, `Queue`, `Stack`, `EntityCollection`) | Collections of entities or values. Doctrine models these as associations or as a `json` column of primitives - a Type would hide the relational structure. |
+| `Datetime\Clock`, `Datetime\SystemClock`, `Datetime\FrozenClock` | Services that tell the current time, not values. |
+| `Datetime\DatetimeContract`, `Datetime\DateTimeInterface` | Interfaces - the concrete `DateTime` and `DateTimeImmutable` get their own mapping. |
 | `Exceptions\*` | Control flow, not data. |
 | `Attributes\*` traits, `ValueObjects\Traits\*` | Traits that shape a class' behaviour; they have no value of their own to store. |
 | `ValueObjects\AbstractValueObject` | Abstract - the concrete Value Objects that extend it get their own mapping. |
@@ -288,10 +298,11 @@ columns. Renaming here is the supported way to resolve a clash.
 
 ### Timezones
 
-`DatetimeTzType` stores the UTC offset only on platforms that have a timezone-aware column type -
-PostgreSQL `TIMESTAMP WITH TIME ZONE`, Oracle, SQL Server `DATETIMEOFFSET`. **MySQL has no such
-column type**, and DBAL falls back to a plain `DATETIME`, which silently drops the offset. On MySQL,
-prefer `DatetimeType` plus a separate timezone column mapped with `DateTimeZoneType`.
+`DateTimeTzType` and `DateTimeTzImmutableType` store the UTC offset only on platforms that have a
+timezone-aware column type - PostgreSQL `TIMESTAMP WITH TIME ZONE`, Oracle, SQL Server
+`DATETIMEOFFSET`. **MySQL has no such column type**, and DBAL falls back to a plain `DATETIME`, which
+silently drops the offset. On MySQL, prefer `DateTimeType` or `DateTimeImmutableType` plus a separate
+timezone column mapped with `DateTimeZoneType`.
 
 ### Indexing a URL
 

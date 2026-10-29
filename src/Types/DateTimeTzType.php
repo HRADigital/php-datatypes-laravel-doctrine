@@ -13,27 +13,33 @@ declare(strict_types=1);
 namespace HraDigital\Components\DatatypesDoctrine\Types;
 
 use Doctrine\DBAL\Platforms\AbstractPlatform;
+use HraDigital\Datatypes\Datetime\DateTime;
 
 /**
- * Maps HraDigital\Datatypes\Datetime\Datetime onto a timezone-aware DATETIME column.
+ * Maps HraDigital\Datatypes\Datetime\DateTime onto a timezone-aware DATETIME column.
  *
  * Only some platforms carry the offset in the column itself (PostgreSQL TIMESTAMP WITH TIME
  * ZONE, Oracle, SQL Server DATETIMEOFFSET). On MySQL there is no such column type and DBAL
- * falls back to a plain DATETIME, which silently drops the offset - prefer DatetimeType plus
+ * falls back to a plain DATETIME, which silently drops the offset - prefer DateTimeType plus
  * a separate timezone column there, mapped with DateTimeZoneType.
  *
  * @package   HraDigital\Components\DatatypesDoctrine
  * @copyright HraDigital\Components\DatatypesDoctrine
  * @license   MPL-2.0
  */
-class DatetimeTzType extends AbstractDatetimeType
+class DateTimeTzType extends AbstractDatetimeType
 {
-    public const NAME = 'DatetimeTzType';
+    public const NAME = 'DateTimeTzType';
 
     /** @inheritDoc */
     public function getSQLDeclaration(array $column, AbstractPlatform $platform): string
     {
         return $platform->getDateTimeTzTypeDeclarationSQL($column);
+    }
+
+    protected function datatypeClass(): string
+    {
+        return DateTime::class;
     }
 
     protected function formatString(AbstractPlatform $platform): string

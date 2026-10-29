@@ -14,9 +14,12 @@ namespace HraDigital\Components\DatatypesDoctrine;
 
 use HraDigital\Components\DatatypesDoctrine\Types\AddressType;
 use HraDigital\Components\DatatypesDoctrine\Types\CurrencyType;
+use HraDigital\Components\DatatypesDoctrine\Types\DateImmutableType;
 use HraDigital\Components\DatatypesDoctrine\Types\DateIntervalType;
-use HraDigital\Components\DatatypesDoctrine\Types\DatetimeType;
-use HraDigital\Components\DatatypesDoctrine\Types\DatetimeTzType;
+use HraDigital\Components\DatatypesDoctrine\Types\DateTimeImmutableType;
+use HraDigital\Components\DatatypesDoctrine\Types\DateTimeType;
+use HraDigital\Components\DatatypesDoctrine\Types\DateTimeTzImmutableType;
+use HraDigital\Components\DatatypesDoctrine\Types\DateTimeTzType;
 use HraDigital\Components\DatatypesDoctrine\Types\DateTimeZoneType;
 use HraDigital\Components\DatatypesDoctrine\Types\DateType;
 use HraDigital\Components\DatatypesDoctrine\Types\EmailAddressType;
@@ -29,6 +32,7 @@ use HraDigital\Components\DatatypesDoctrine\Types\NifType;
 use HraDigital\Components\DatatypesDoctrine\Types\NifTypeType;
 use HraDigital\Components\DatatypesDoctrine\Types\SlugType;
 use HraDigital\Components\DatatypesDoctrine\Types\StrType;
+use HraDigital\Components\DatatypesDoctrine\Types\TimeImmutableType;
 use HraDigital\Components\DatatypesDoctrine\Types\TimeType;
 use HraDigital\Components\DatatypesDoctrine\Types\UrlType;
 
@@ -68,31 +72,35 @@ final class DoctrineTypes
     {
         return [
             // Scalar.
-            StrType::NAME          => StrType::class,
+            StrType::NAME                 => StrType::class,
 
             // Web.
-            EmailAddressType::NAME => EmailAddressType::class,
-            UrlType::NAME          => UrlType::class,
-            SlugType::NAME         => SlugType::class,
+            EmailAddressType::NAME        => EmailAddressType::class,
+            UrlType::NAME                 => UrlType::class,
+            SlugType::NAME                => SlugType::class,
 
             // Date and time.
-            DatetimeType::NAME     => DatetimeType::class,
-            DatetimeTzType::NAME   => DatetimeTzType::class,
-            DateType::NAME         => DateType::class,
-            TimeType::NAME         => TimeType::class,
-            DateIntervalType::NAME => DateIntervalType::class,
-            DateTimeZoneType::NAME => DateTimeZoneType::class,
+            DateTimeType::NAME            => DateTimeType::class,
+            DateTimeTzType::NAME          => DateTimeTzType::class,
+            DateType::NAME                => DateType::class,
+            TimeType::NAME                => TimeType::class,
+            DateTimeImmutableType::NAME   => DateTimeImmutableType::class,
+            DateTimeTzImmutableType::NAME => DateTimeTzImmutableType::class,
+            DateImmutableType::NAME       => DateImmutableType::class,
+            TimeImmutableType::NAME       => TimeImmutableType::class,
+            DateIntervalType::NAME        => DateIntervalType::class,
+            DateTimeZoneType::NAME        => DateTimeZoneType::class,
 
             // Financial.
-            CurrencyType::NAME     => CurrencyType::class,
-            MoneyType::NAME        => MoneyType::class,
+            CurrencyType::NAME            => CurrencyType::class,
+            MoneyType::NAME               => MoneyType::class,
 
             // Fiscal.
-            NifType::NAME          => NifType::class,
-            NifTypeType::NAME      => NifTypeType::class,
+            NifType::NAME                 => NifType::class,
+            NifTypeType::NAME             => NifTypeType::class,
 
             // Value Objects.
-            AddressType::NAME      => AddressType::class,
+            AddressType::NAME             => AddressType::class,
         ];
     }
 
@@ -100,10 +108,9 @@ final class DoctrineTypes
      * The Types covering the native PHP classes, so an Entity that holds a plain \DateTime is
      * mapped with the same naming convention as one holding a Datatype.
      *
-     * They carry a `Native` prefix because three of the four native classes share their short
-     * name with a Datatypes class - \DateInterval and \DateTimeZone outright, \DateTime with
-     * only a letter's difference from Datetime. Without the prefix a mapping would be one
-     * capital letter away from silently selecting the wrong Type.
+     * They carry a `Native` prefix because every one of the four native classes shares its short
+     * name with a Datatypes class - \DateTime, \DateTimeImmutable, \DateInterval and \DateTimeZone.
+     * Without the prefix the two Types would need the very same name.
      *
      * @return array<string, class-string<Types\AbstractDatatypeType>>
      */
