@@ -1,7 +1,7 @@
-.PHONY: help hooks-install \
+.PHONY: help \
 	lint lint-scope-check lint-fix cs cs-fixer cs-fixer-fix analyse \
 	validate validate-implementation \
-	test test-unit test-feature
+	test test-unit test-feature install-hooks
 
 SHELL := /bin/bash
 
@@ -44,7 +44,6 @@ endif
 
 help:
 	@echo "Available commands:"
-	@echo "  make hooks-install          - point git at the repo's .githooks/ directory"
 	@echo "  make lint                   - PHPCS code-style check (report only)"
 	@echo "  make lint-scope-check       - warn when PHPCS skipped requested FILES"
 	@echo "  make lint-fix               - apply PHPCBF code-style fixes"
@@ -57,16 +56,10 @@ help:
 	@echo "  make test                   - run the full PHPUnit suite"
 	@echo "  make test-unit              - run the Unit testsuite (the Types themselves)"
 	@echo "  make test-feature           - run the Feature testsuite (the Laravel wiring)"
+	@echo "  make install-hooks          - install the local commit-msg githook (commitlint via npx)"
 	@echo "  (FILES=\"a.php b.php\" scopes the file-based gates; FILTER=Foo narrows a test run)"
 	@echo "  (append QUIET=1 to any target for silent-on-success: gates print only on"
 	@echo "   failure, test targets print only their final summary; drop QUIET to watch a long run)"
-
-# The repo ships its hooks in .githooks/ rather than writing into .git/hooks, so they are
-# version-controlled and reviewable. This points git at them; it is per-clone and opt-in,
-# which is exactly why CI enforces the same rules independently.
-hooks-install:
-	@git config core.hooksPath .githooks
-	@echo "git hooks enabled: $$(ls .githooks | tr '\n' ' ')"
 
 # FILES (optional) scopes the file-based gates to a list of paths; empty = the ruleset scope.
 lint:
@@ -179,3 +172,10 @@ else
 	@echo "Running Feature suite..."
 	@$(EXEC) php -d memory_limit=-1 vendor/bin/phpunit --no-coverage --testsuite=Feature $(if $(FILTER),--filter="$(FILTER)") $(FILES)
 endif
+
+# Mirrors the CI semantic-commits gate locally. No package.json/devDependency in this
+# project (see commitlint.config.mjs), so the hook itself fetches commitlint via npx.
+install-hooks:
+	@cp .githooks/commit-msg .git/hooks/commit-msg
+	@chmod +x .git/hooks/commit-msg
+	@echo "Installed .git/hooks/commit-msg"

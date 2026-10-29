@@ -364,15 +364,13 @@ Append `QUIET=1` to any target for silent-on-success output. Scope the file-base
 ### Git hooks
 
 ```bash
-make hooks-install
+make install-hooks
 ```
 
-Points git at the repo's version-controlled `.githooks/`:
-
-- **`commit-msg`** - rejects a commit message that is not a Conventional Commit. The package's
-  version is derived entirely from commit messages, so a malformed one silently costs a release,
-  and by the time CI catches it the message is already in the history.
-- **`pre-push`** - runs the same static gates CI runs, before anything leaves the machine.
+Copies `.githooks/commit-msg` into `.git/hooks/`. The hook runs commitlint through `npx`, with the
+rules in `commitlint.config.mjs`, and rejects a commit message that is not a Conventional Commit.
+The package's version is derived entirely from commit messages, so a malformed one silently costs
+a release, and by the time CI catches it the message is already in the history.
 
 Hooks are per-clone and opt-in, which is exactly why CI enforces the same rules independently.
 
@@ -389,7 +387,8 @@ release workflow computes the next version and cuts a tag with generated notes.
 
 Every commit that lands on `master` ships a version - the version identifies the state of the
 project, so there is no "no release" bucket. A breaking change needs the **footer**, on its own line
-after a blank line; a `feat!:` suffix alone does **not** cut a major.
+after a blank line; a `feat!:` suffix alone does **not** cut a major, so commitlint rejects a `!`
+header that has no `BREAKING CHANGE:` footer.
 
 ## Licence
 
