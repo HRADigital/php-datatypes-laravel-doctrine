@@ -51,7 +51,7 @@ indexable, human-readable value.
 | Requirement | Supported |
 |---|---|
 | PHP | 8.2, 8.3, 8.4 |
-| `hradigital/php-datatypes` | ^3.3 |
+| `hradigital/php-datatypes` | ^3.4.1 |
 | `doctrine/dbal` | ^3.8, ^4.0 |
 | Laravel (`illuminate/*`) | 12, 13 |
 
@@ -167,6 +167,9 @@ The four Types covering **native PHP** classes carry a `Native` prefix, because 
 shares its short name with a Datatypes class: `\DateTime`, `\DateTimeImmutable`, `\DateInterval`
 and `\DateTimeZone`. Without the prefix, the two Types would need the very same name.
 
+`RecordId` has no plain `RecordIdType`. The storage format is a per-column schema decision, so the
+name carries the column kind, as `DateTimeTzType` does: `RecordIdStringType` or `RecordIdBinaryType`.
+
 ## Type reference
 
 ### Datatypes library
@@ -192,6 +195,8 @@ and `\DateTimeZone`. Without the prefix, the two Types would need the very same 
 | `NifType` | `…\Fiscal\Nif` | `CHAR(9)` | Portuguese tax number. Stores the nine digits with whitespace removed; a wrong check digit fails. |
 | `NifTypeType` | `…\Fiscal\NifType` | `VARCHAR(32)` | The enum's backing value. An unknown value fails rather than loading as `null`. |
 | `AddressType` | `…\ValueObjects\Address` | `JSON` | `{"street", "postal_code", "city", "country"}`. See [Multi-field Value Objects](#multi-field-value-objects). |
+| `RecordIdStringType` | `…\ValueObjects\RecordId` | `CHAR(36)` / `UUID` | Canonical lower-case UUID v7. A non-v7 UUID fails. See [Record IDs](#record-ids). |
+| `RecordIdBinaryType` | `…\ValueObjects\RecordId` | `BINARY(16)` / `BYTEA` | 16 raw bytes - smaller indexes; v7 keeps them insert-ordered. See [Record IDs](#record-ids). |
 
 ### Native PHP classes
 
@@ -266,6 +271,36 @@ public function getTotal(): Money
 ```
 
 Note that `CurrencyType` is useful on its own in exactly that split mapping.
+
+## Record IDs
+
+Give each Entity its own ID class, and a Type that maps only that class. The Type then rejects an ID
+of another Entity on write - an `OrderId` column never stores a `UserId`.
+
+```php
+readonly class OrderId extends RecordId {}
+
+class OrderIdType extends RecordIdBinaryType
+{
+    public const NAME = 'OrderIdType';
+
+    protected function datatypeClass(): string
+    {
+        return OrderId::class;
+    }
+}
+```
+
+Register it in the `types` map of the published config (see [Configuration](#configuration-optional)),
+or with `Type::addType(OrderIdType::NAME, OrderIdType::class)`.
+
+In DQL, pass the type with the parameter:
+
+```php
+$query->setParameter('id', $id, 'RecordIdBinaryType');
+```
+
+Without the type, Doctrine binds the 36-character string, which never matches a `BINARY(16)` column.
 
 ## Configuration (optional)
 
