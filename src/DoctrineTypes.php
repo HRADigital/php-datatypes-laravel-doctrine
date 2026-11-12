@@ -30,6 +30,8 @@ use HraDigital\Components\DatatypesDoctrine\Types\NativeDateTimeType;
 use HraDigital\Components\DatatypesDoctrine\Types\NativeDateTimeZoneType;
 use HraDigital\Components\DatatypesDoctrine\Types\NifType;
 use HraDigital\Components\DatatypesDoctrine\Types\NifTypeType;
+use HraDigital\Components\DatatypesDoctrine\Types\RecordIdBinaryType;
+use HraDigital\Components\DatatypesDoctrine\Types\RecordIdStringType;
 use HraDigital\Components\DatatypesDoctrine\Types\SlugType;
 use HraDigital\Components\DatatypesDoctrine\Types\StrType;
 use HraDigital\Components\DatatypesDoctrine\Types\TimeImmutableType;
@@ -101,6 +103,8 @@ final class DoctrineTypes
 
             // Value Objects.
             AddressType::NAME             => AddressType::class,
+            RecordIdStringType::NAME      => RecordIdStringType::class,
+            RecordIdBinaryType::NAME      => RecordIdBinaryType::class,
         ];
     }
 

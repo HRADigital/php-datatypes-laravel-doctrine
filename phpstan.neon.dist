@@ -13,3 +13,14 @@ parameters:
     # types, generics). A docblock that contradicts the native type is an error, not a hint.
     treatPhpDocTypesAsCertain: false
     reportWrongPhpDocTypeInVarTag: true
+
+    ignoreErrors:
+        # The trait is declared once per DBAL major behind enum_exists(). PHPStan does not follow
+        # the branch, so on DBAL 3 it checks the DBAL 4 trait. Unmatched on DBAL 4 by design.
+        -
+            identifiers:
+                - function.impossibleType
+                - method.childReturnType
+                - return.type
+            path: src/Types/Concerns/BinaryBindingType.php
+            reportUnmatched: false

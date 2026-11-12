@@ -1,0 +1,25 @@
+<?php
+
+/**
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) HRADigital - Hugo Rafael Azevedo.
+ */
+
+declare(strict_types=1);
+
+namespace HraDigital\Tests\Components\DatatypesDoctrine\Unit\Types\Fixtures;
+
+use HraDigital\Components\DatatypesDoctrine\Types\RecordIdBinaryType;
+
+class OrderIdBinaryType extends RecordIdBinaryType
+{
+    public const NAME = 'OrderIdBinaryType';
+
+    protected function datatypeClass(): string
+    {
+        return OrderId::class;
+    }
+}
